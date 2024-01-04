@@ -2,6 +2,11 @@ import pygame
 import sys
 import os
 
+# background size
+# width 1024
+# height 512
+# background_3 <- background_1 ->  background_2
+
 FPS = 50
 pygame.init()
 WIDTH, HEIGHT = size = 1024, 512
