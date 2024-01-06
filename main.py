@@ -1,4 +1,5 @@
 import pygame
+from pygame.locals import *
 import sys
 import os
 
@@ -7,7 +8,7 @@ import os
 # height 512
 # background_3 <- background_1 ->  background_2
 
-FPS = 50
+FPS = 15
 pygame.init()
 WIDTH, HEIGHT = size = 1024, 512
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
@@ -73,12 +74,33 @@ background_group = pygame.sprite.Group()
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(player_group)
-        self.frames = []
+        self.pos_y = HEIGHT - 170
+        self.speed = 8
+
+        self.Rframes = []
+        self.Lframes = []
+
         self.cut_sheet(load_image('images/pygame_character.png'), 2, 2)
-        self.frames_static = self.frames[0:2]
+        self.frames_static = self.Rframes[0:2]
+        self.Rframes = self.Rframes[2:]
         self.cur_frame = 0
         self.image = self.frames_static[0]
-        self.rect = self.rect.move(pos_x, HEIGHT - 170)
+        self.rect = self.rect.move(pos_x, self.pos_y)
+
+    def Rmove(self):
+        self.rect = self.rect.move(self.speed, 0)
+
+        self.cur_frame = (self.cur_frame + 1) % len(self.Rframes)
+        self.image = self.Rframes[self.cur_frame]
+
+    def Lmove(self):
+        self.rect = self.rect.move(self.speed, 0)
+
+        self.cur_frame = (self.cur_frame + 1) % len(self.Lframes)
+        self.image = self.Lframes[self.cur_frame]
+
+    def static(self):
+        self.image = self.frames_static[0]
 
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
@@ -86,29 +108,28 @@ class Player(pygame.sprite.Sprite):
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(
+                self.Rframes.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
-
-    def update(self):
-        pass
-        #self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        #self.image = self.frames[self.cur_frame]
 
 
 def load_location(cur_id):
-    if 0 < cur_id < len(background_group):
+    if cur_id < len(background_group) or cur_id >= 0:
         background = Locations[cur_id]
         screen.blit(background, (0, 0))
 
 
 LOCATION_NOW = 0
 player = Player(WIDTH // 2.5)
-
 # main cycle
 while True:
     for event in pygame.event.get():
+        keys = pygame.key.get_pressed()
         if event.type == pygame.QUIT:
             terminate()
+        if keys[K_d]:
+            player.Rmove()
+        elif keys[K_a]:
+            player.Lmove()
 
     screen.fill((50, 50, 70))
     load_location(LOCATION_NOW)
