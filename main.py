@@ -15,16 +15,15 @@ screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 
-def terminate():
+def out():
     pygame.quit()
     sys.exit()
 
 
-def load_image(name, colorkey=None):
+def load_image(name):
     fullname = os.path.join('data', name)
-
     if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
+        print(f"'{fullname}' не найден")
         sys.exit()
     image = pygame.image.load(fullname)
     return image
@@ -58,7 +57,7 @@ def start_screen():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                terminate()
+                out()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
                     return
@@ -74,30 +73,31 @@ background_group = pygame.sprite.Group()
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(player_group)
-        self.pos_y = HEIGHT - 170
+        self.pos_y = HEIGHT - 155
         self.speed = 8
 
         self.Rframes = []
         self.Lframes = []
 
-        self.cut_sheet(load_image('images/pygame_character.png'), 2, 2)
-        self.frames_static = self.Rframes[0:2]
-        self.Rframes = self.Rframes[2:]
+        self.cut_sheet(load_image('images/pygame_character.png'), 3, 3)
+        self.frames_static = self.Rframes[0:3]
+        self.Lframes = self.Rframes[6:]
+        self.Rframes = self.Rframes[3:6]
         self.cur_frame = 0
         self.image = self.frames_static[0]
         self.rect = self.rect.move(pos_x, self.pos_y)
 
-    def Rmove(self):
-        self.rect = self.rect.move(self.speed, 0)
+    def move(self, side): # True = right, False = Left
+        if side:
+            self.rect = self.rect.move(self.speed, 0)
 
-        self.cur_frame = (self.cur_frame + 1) % len(self.Rframes)
-        self.image = self.Rframes[self.cur_frame]
+            self.cur_frame = (self.cur_frame + 1) % len(self.Rframes)
+            self.image = self.Rframes[self.cur_frame]
+        else:
+            self.rect = self.rect.move(-self.speed, 0)
 
-    def Lmove(self):
-        self.rect = self.rect.move(self.speed, 0)
-
-        self.cur_frame = (self.cur_frame + 1) % len(self.Lframes)
-        self.image = self.Lframes[self.cur_frame]
+            self.cur_frame = (self.cur_frame + 1) % len(self.Lframes)
+            self.image = self.Lframes[self.cur_frame]
 
     def static(self):
         self.image = self.frames_static[0]
@@ -125,11 +125,11 @@ while True:
     for event in pygame.event.get():
         keys = pygame.key.get_pressed()
         if event.type == pygame.QUIT:
-            terminate()
+            out()
         if keys[K_d]:
-            player.Rmove()
+            player.move(True)
         elif keys[K_a]:
-            player.Lmove()
+            player.move(False)
 
     screen.fill((50, 50, 70))
     load_location(LOCATION_NOW)
