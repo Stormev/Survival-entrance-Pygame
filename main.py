@@ -95,7 +95,7 @@ class Player(pygame.sprite.Sprite): # Персонаж
         self.in_house = False
         self.unvisible_frame = load_image('images/None.png')
 
-        self.hungry = 100
+        self.hungry = 70
         self.temp = 36
 
         self.Rframes = []
@@ -178,6 +178,10 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
     if turn and len(Locations) > LOCATION_NOW + 1:
         LOCATION_NOW += 1
         cur_player.rect.x = 100
+        for i in item_group:
+            i.kill()
+        for i in range(randint(0, 2)):
+            item = Item(randint(60, WIDTH - 60))
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
         cur_player.rect.x = WIDTH - 150
@@ -245,7 +249,6 @@ def start_game():
                 SCORE += i.score
                 i.kill()
 
-    item = Item(300)
     # main cycle
     while True:
         for event in pygame.event.get():
