@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import sqlite3
+from random import randint
 import sys
 import os
 
@@ -19,8 +20,16 @@ clock = pygame.time.Clock()
 database = sqlite3.connect('data/scores.db')
 cursor = database.cursor()
 
+cursor.execute("""CREATE TABLE IF NOT EXISTS main
+                (id INTEGER PRIMARY KEY AUTOINCREMENT,  
+                scores INTEGER,
+                time_life INTEGER,
+                is_win INTEGER)
+            """)
+
 
 def out():  # Выход
+    database.close()
     pygame.quit()
     sys.exit()
 
@@ -123,6 +132,9 @@ class Player(pygame.sprite.Sprite): # Персонаж
                     frame_location, self.rect.size)))
 
 
+player = Player(-100)
+
+
 def load_location(cur_id):
     if 0 <= cur_id < len(Locations):
         background = Locations[cur_id]
@@ -132,77 +144,110 @@ def load_location(cur_id):
 LOCATION_NOW = len(Locations) // 2
 
 
-def next_locations(turn):  # True = right False = left ЗАГРУЗКА ЛОКАЦИИ
+def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗКА ЛОКАЦИИ
     global LOCATION_NOW
     if turn and len(Locations) > LOCATION_NOW + 1:
         LOCATION_NOW += 1
-        player.rect.x = 100
+        cur_player.rect.x = 100
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
-        player.rect.x = WIDTH - 150
+        cur_player.rect.x = WIDTH - 150
     elif turn:
-        player.rect.x -= 20
+        cur_player.rect.x -= 20
     else:
-
-        player.rect.x += 20
-
-
-player = Player(WIDTH // 2.5)
+        cur_player.rect.x += 20
 
 
-def end_game(status):  # False = lose  True = wib
-    global player
-    player = None
-
+def end_game(status):  # False = lose  True = wib GAME END
     screen.fill((50, 50, 70))
     fon = 'images/start_screen_controll.png'
     fon = pygame.transform.scale(load_image(fon), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
 
+    cursor.execute(f'''INSERT INTO main(scores, time_life, is_win) VALUES({SCORE}, {TIME_LIFE}, {status})''')
+    database.commit()
+
+    font = pygame.font.Font(None, 30)
+
+    info = [f'Игра окончена! Ваш персонаж: {"Выжил" if status else "Невыжил"}', f'Ваши очки: {SCORE}',
+            f'Вы прожили : {TIME_LIFE} секунд', f'Ваши Результаты были успешно сохранены!',
+            f'Чтобы начать новую игру нажмите TAB',]
+
+    text_coord = 120, 50
+    for i, line in enumerate(info):
+        if i == len(info) - 2:
+            text_coord = text_coord[0], text_coord[1] + 185
+        string_rendered = font.render(line, 1, pygame.Color('Black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord = text_coord[0], text_coord[1] + 20
+        intro_rect.top = text_coord[1]
+        intro_rect.x = text_coord[0]
+        text_coord = text_coord[0], text_coord[1] + intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
     while True:
         for events in pygame.event.get():
             if events.type == pygame.QUIT:
                 out()
+            elif events.type == pygame.KEYDOWN:
+                if events.key == pygame.K_TAB:
+                    start_game()
         pygame.display.flip()
         clock.tick(FPS)
 
 
-hungry_count = 0
+def start_game():
+    global TIME_LIFE
+    global player_group
+    global background_group
 
-# main cycle
-while True:
-    for event in pygame.event.get():
-        keys = pygame.key.get_pressed()
-        if event.type == pygame.QUIT:
-            out()
-        if keys[K_d]:
-            player.move(True)
-        elif keys[K_a]:
-            player.move(False)
-    plr_pos = player.rect.x
-    if plr_pos < 50:
-        next_locations(False)
-    elif plr_pos > WIDTH - 50:
-        next_locations(True)
+    player_group = pygame.sprite.Group()
+    background_group = pygame.sprite.Group()
+    player = Player(WIDTH // 2.5)
 
-    if hungry_count > 5:
-        hungry_count = 0
-        player.hungry -= 1
-    else:
-        hungry_count += 1
+    to_second_count = 0
+    # main cycle
+    while True:
+        for event in pygame.event.get():
+            keys = pygame.key.get_pressed()
+            if event.type == pygame.QUIT:
+                out()
+            if keys[K_d]:
+                player.move(True)
+            elif keys[K_a]:
+                player.move(False)
+        plr_pos = player.rect.x
+        if plr_pos < 50:
+            next_locations(player, False)
+        elif plr_pos > WIDTH - 50:
+            next_locations(player, True)
 
-    if player.hungry < 0:
-        end_game(False)
-        break
+        if to_second_count >= FPS:  # Счётчик 1-й секунды
+            to_second_count = 0
+            player.hungry -= 1
+            TIME_LIFE += 1
 
-    screen.fill((50, 50, 70))
-    load_location(LOCATION_NOW)
-    player_group.update()
-    player_group.draw(screen)
+            if randint(0, 4) == 4:
+                player.temp -= 1
 
-    print('--------------------------')
-    print('Hungry:', player.hungry)
-    print('Temperature:', player.temp)
+            print('--------------------------')
+            print('Hungry:', player.hungry)
+            print('Temperature:', player.temp)
+        else:
+            to_second_count += 1
 
-    pygame.display.flip()
-    clock.tick(FPS)
+        if player.hungry < 0:
+            end_game(False)
+            break
+
+        screen.fill((50, 50, 70))
+        load_location(LOCATION_NOW)
+        player_group.update()
+        player_group.draw(screen)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+start_game()
+
