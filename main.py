@@ -132,18 +132,19 @@ class Player(pygame.sprite.Sprite): # Персонаж
                     frame_location, self.rect.size)))
 
 
-items = [[load_image('images/item_bytilka.png'), -5, -1], [load_image('images/item_chocolate.png'), 20, 3],
-         [load_image('images/item_doshik.png'), 10, 2], [load_image('images/item_honey.png'), 40, 4]]
+items = [[load_image('images/item_bytilka.png'), -5, -1], [load_image('images/item_chocolate.png'), 8, 3],
+         [load_image('images/item_doshik.png'), 4, 2], [load_image('images/item_honey.png'), 12, 4]]
 
 
 class Item(pygame.sprite.Sprite):
-    def __init__(self, pos_x):
+    def __init__(self, pos_x=randint(60, WIDTH - 60)):
         super().__init__(item_group)
-        self.pos_y = HEIGHT - 155
+        self.pos_y = HEIGHT - 70
         data = items[randint(0, len(items) - 1)]
         self.image = data[0]
         self.cost = data[1]
         self.score = data[2]
+        self.rect = self.image.get_rect()
         self.rect = self.rect.move(pos_x, self.pos_y)
 
 
@@ -221,6 +222,16 @@ def start_game():
     player = Player(WIDTH // 2.5)
 
     to_second_count = 0
+
+    def collide_items():
+        global SCORE
+        for item in item_group:
+            if player.rect.collidepoint(item.rect.center):
+                player.hungry += item.cost
+                SCORE += item.score
+                item.kill()
+
+    item = Item(300)
     # main cycle
     while True:
         for event in pygame.event.get():
@@ -261,11 +272,11 @@ def start_game():
         screen.fill((50, 50, 70))
         load_location(LOCATION_NOW)
 
+        collide_items()
         player_group.update()
         player_group.draw(screen)
         item_group.update()
-        item_group.draw()
-
+        item_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
 
