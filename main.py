@@ -91,7 +91,9 @@ class Player(pygame.sprite.Sprite): # Персонаж
     def __init__(self, pos_x):
         super().__init__(player_group)
         self.pos_y = HEIGHT - 155
-        self.speed = 8
+        self.speed = 8  # обычно 8
+        self.in_house = False
+        self.unvisible_frame = load_image('images/None.png')
 
         self.hungry = 100
         self.temp = 36
@@ -131,6 +133,16 @@ class Player(pygame.sprite.Sprite): # Персонаж
                 self.Rframes.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
+    def hide(self, status):
+        if status:
+            self.in_house = status
+            self.speed = 0
+            self.image = self.unvisible_frame
+        else:
+            self.image = self.frames_static[0]
+            self.in_house = status
+            self.speed = 8
+
 
 items = [[load_image('images/item_bytilka.png'), -5, -1], [load_image('images/item_chocolate.png'), 8, 3],
          [load_image('images/item_doshik.png'), 4, 2], [load_image('images/item_honey.png'), 12, 4]]
@@ -157,7 +169,8 @@ def load_location(cur_id):
         screen.blit(background, (0, 0))
 
 
-LOCATION_NOW = len(Locations) // 2
+centre_location = len(Locations) // 2
+LOCATION_NOW = centre_location
 
 
 def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗКА ЛОКАЦИИ
@@ -216,6 +229,7 @@ def start_game():
     global TIME_LIFE
     global player_group
     global item_group
+    global player
 
     player_group = pygame.sprite.Group()
     item_group = pygame.sprite.Group()
@@ -223,25 +237,33 @@ def start_game():
 
     to_second_count = 0
 
-    def collide_items():
+    def collide_items():  # Проверка на колизию с предметом
         global SCORE
-        for item in item_group:
-            if player.rect.collidepoint(item.rect.center):
-                player.hungry += item.cost
-                SCORE += item.score
-                item.kill()
+        for i in item_group:
+            if player.rect.collidepoint(i.rect.center):
+                player.hungry += i.cost
+                SCORE += i.score
+                i.kill()
 
     item = Item(300)
     # main cycle
     while True:
         for event in pygame.event.get():
-            keys = pygame.key.get_pressed()
+            keys = pygame.key.get_pressed()  # Получить зажатые кнопки
             if event.type == pygame.QUIT:
                 out()
-            if keys[K_d]:
+            if keys[K_d] and not player.in_house:  # Движение
                 player.move(True)
-            elif keys[K_a]:
+            elif keys[K_a] and not player.in_house:  # Движение
                 player.move(False)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:  # Механика 'Подъезд'
+                    if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
+                            not player.in_house:
+                        player.hide(True)
+                elif event.key == pygame.K_s and player.in_house: # Механика 'Подъезд'
+                    player.hide(False)
+        # Проверка для смены локации
         plr_pos = player.rect.x
         if plr_pos < 50:
             next_locations(player, False)
@@ -253,8 +275,11 @@ def start_game():
             player.hungry -= 1
             TIME_LIFE += 1
 
-            if randint(0, 4) == 4:
+            if not player.in_house and randint(0, 4) == 4:  # температура
                 player.temp -= 1
+            elif player.in_house:
+                if player.temp + 1 <= 36:
+                    player.temp += 1
 
             print('--------------------------')
             print('Hungry:', player.hungry)
@@ -262,13 +287,14 @@ def start_game():
         else:
             to_second_count += 1
 
-        if player.hungry < 0:
+        if player.hungry < 0: # Проверка выживаемости
             end_game(False)
             break
         elif player.temp <= 25:
             end_game(False)
             break
 
+        # Рендер
         screen.fill((50, 50, 70))
         load_location(LOCATION_NOW)
 
