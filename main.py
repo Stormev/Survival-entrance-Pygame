@@ -80,8 +80,8 @@ def start_screen(): # Стартовый экран
 
 
 start_screen()
+item_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
-background_group = pygame.sprite.Group()
 
 SCORE = 0
 TIME_LIFE = 0
@@ -94,7 +94,7 @@ class Player(pygame.sprite.Sprite): # Персонаж
         self.speed = 8
 
         self.hungry = 100
-        self.temp = 10
+        self.temp = 36
 
         self.Rframes = []
         self.Lframes = []
@@ -130,6 +130,21 @@ class Player(pygame.sprite.Sprite): # Персонаж
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.Rframes.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+
+
+items = [[load_image('images/item_bytilka.png'), -5, -1], [load_image('images/item_chocolate.png'), 20, 3],
+         [load_image('images/item_doshik.png'), 10, 2], [load_image('images/item_honey.png'), 40, 4]]
+
+
+class Item(pygame.sprite.Sprite):
+    def __init__(self, pos_x):
+        super().__init__(item_group)
+        self.pos_y = HEIGHT - 155
+        data = items[randint(0, len(items) - 1)]
+        self.image = data[0]
+        self.cost = data[1]
+        self.score = data[2]
+        self.rect = self.rect.move(pos_x, self.pos_y)
 
 
 player = Player(-100)
@@ -199,10 +214,10 @@ def end_game(status):  # False = lose  True = wib GAME END
 def start_game():
     global TIME_LIFE
     global player_group
-    global background_group
+    global item_group
 
     player_group = pygame.sprite.Group()
-    background_group = pygame.sprite.Group()
+    item_group = pygame.sprite.Group()
     player = Player(WIDTH // 2.5)
 
     to_second_count = 0
@@ -239,11 +254,17 @@ def start_game():
         if player.hungry < 0:
             end_game(False)
             break
+        elif player.temp <= 25:
+            end_game(False)
+            break
 
         screen.fill((50, 50, 70))
         load_location(LOCATION_NOW)
+
         player_group.update()
         player_group.draw(screen)
+        item_group.update()
+        item_group.draw()
 
         pygame.display.flip()
         clock.tick(FPS)
