@@ -47,8 +47,19 @@ Locations = [load_image('images/background_3.png'), load_image('images/backgroun
              load_image('images/background_2.png')]
 
 
-def start_screen(): # Стартовый экран
-    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо']
+def start_screen():  # Стартовый экран
+    start_music = 'data/sounds/start_sound.mp3'
+    pygame.mixer.music.load(start_music)
+    pygame.mixer.music.play()
+
+    def create_text(x, y, text):
+        tip = font.render(text, 1, pygame.Color('Black'))
+        tip_rect = tip.get_rect()
+        tip_rect.x = x
+        tip_rect.y = y
+        screen.blit(tip, tip_rect)
+
+    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо', 'W/S - Зайти в подъезд/выйти']
     fon = 'images/start_screen_controll.png'
     fon = pygame.transform.scale(load_image(fon), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -57,23 +68,21 @@ def start_screen(): # Стартовый экран
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('Black'))
         intro_rect = string_rendered.get_rect()
-        text_coord = text_coord[0], text_coord[1] + 10
+        text_coord = text_coord[0], text_coord[1] + 12
         intro_rect.top = text_coord[1]
         intro_rect.x = text_coord[0]
         text_coord = text_coord[0], text_coord[1] + intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
-    tip = font.render('Нажмите TAB чтобы начать игру', 1, pygame.Color('Black'))
-    tip_rect = tip.get_rect()
-    tip_rect.x = text_coord[0]
-    tip_rect.y = 430
-    screen.blit(tip, tip_rect)
+    create_text(120, 395, 'Нажмите TAB чтобы начать игру')
+    create_text(120, 430, 'Нажмите ESCP чтобы открыть рекордную доску')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 out()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
+                    pygame.mixer.music.stop()
                     return
         pygame.display.flip()
         clock.tick(FPS)
@@ -144,8 +153,8 @@ class Player(pygame.sprite.Sprite): # Персонаж
             self.speed = 8
 
 
-items = [[load_image('images/item_bytilka.png'), -5, -1], [load_image('images/item_chocolate.png'), 8, 3],
-         [load_image('images/item_doshik.png'), 4, 2], [load_image('images/item_honey.png'), 12, 4]]
+items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 13, 3],
+         [load_image('images/item_doshik.png'), 9, 2], [load_image('images/item_honey.png'), 17, 4]]
 
 
 class Item(pygame.sprite.Sprite):
@@ -180,7 +189,7 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
         for i in item_group:
             i.kill()
         for i in range(randint(0, 2)):
-            item = Item(randint(50, WIDTH - 50))
+            item = Item(randint(65, WIDTH - 65))
 
     if turn and len(Locations) > LOCATION_NOW + 1:
         LOCATION_NOW += 1
@@ -254,12 +263,22 @@ def start_game():
     global player_group
     global item_group
     global player
+    global SCORE
+    global TIME_LIFE
+
+    SCORE = 0
+    TIME_LIFE = 0
 
     player_group = pygame.sprite.Group()
     item_group = pygame.sprite.Group()
     player = Player(WIDTH // 2.5)
 
     to_second_count = 0
+
+    pygame.mixer.music.stop()
+    start_music = 'data/sounds/game_sound.mp3'
+    pygame.mixer.music.load(start_music)
+    pygame.mixer.music.play()
 
     def collide_items():  # Проверка на колизию с предметом
         global SCORE
