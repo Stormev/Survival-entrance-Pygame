@@ -96,7 +96,7 @@ SCORE = 0
 TIME_LIFE = 0
 
 
-class Player(pygame.sprite.Sprite): # Персонаж
+class Player(pygame.sprite.Sprite):  # Персонаж
     def __init__(self, pos_x):
         super().__init__(player_group)
         self.pos_y = HEIGHT - 155
