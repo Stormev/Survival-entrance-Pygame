@@ -175,16 +175,21 @@ LOCATION_NOW = centre_location
 
 def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗКА ЛОКАЦИИ
     global LOCATION_NOW
-    if turn and len(Locations) > LOCATION_NOW + 1:
-        LOCATION_NOW += 1
-        cur_player.rect.x = 100
+
+    def spawn_newItem():
         for i in item_group:
             i.kill()
         for i in range(randint(0, 2)):
-            item = Item(randint(60, WIDTH - 60))
+            item = Item(randint(50, WIDTH - 50))
+
+    if turn and len(Locations) > LOCATION_NOW + 1:
+        LOCATION_NOW += 1
+        cur_player.rect.x = 100
+        spawn_newItem()
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
         cur_player.rect.x = WIDTH - 150
+        spawn_newItem()
     elif turn:
         cur_player.rect.x -= 20
     else:
@@ -227,6 +232,21 @@ def end_game(status):  # False = lose  True = wib GAME END
                     start_game()
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def draw_status():  # Рендер текста атрибутов персонажа
+    font = pygame.font.Font(None, 30)
+    info = [f'Температура тела: {player.temp}', f'Сытость: {player.hungry}']
+
+    text_coord = 25, 5
+    for i, line in enumerate(info):
+        string_rendered = font.render(line, 1, (110, 110, 255), (0, 0, 0))
+        intro_rect = string_rendered.get_rect()
+        text_coord = text_coord[0], text_coord[1] + 20
+        intro_rect.top = text_coord[1]
+        intro_rect.x = text_coord[0]
+        text_coord = text_coord[0], text_coord[1] + intro_rect.height
+        screen.blit(string_rendered, intro_rect)
 
 
 def start_game():
@@ -283,14 +303,10 @@ def start_game():
             elif player.in_house:
                 if player.temp + 1 <= 36:
                     player.temp += 1
-
-            print('--------------------------')
-            print('Hungry:', player.hungry)
-            print('Temperature:', player.temp)
         else:
             to_second_count += 1
 
-        if player.hungry < 0: # Проверка выживаемости
+        if player.hungry < 0:  # Проверка выживаемости
             end_game(False)
             break
         elif player.temp <= 25:
@@ -299,13 +315,16 @@ def start_game():
 
         # Рендер
         screen.fill((50, 50, 70))
-        load_location(LOCATION_NOW)
 
+        load_location(LOCATION_NOW)
+        draw_status()
         collide_items()
+
         player_group.update()
         player_group.draw(screen)
         item_group.update()
         item_group.draw(screen)
+
         pygame.display.flip()
         clock.tick(FPS)
 
