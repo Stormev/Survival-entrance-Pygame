@@ -153,8 +153,8 @@ class Player(pygame.sprite.Sprite):  # Персонаж
             self.speed = 8
 
 
-items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 13, 3],
-         [load_image('images/item_doshik.png'), 9, 2], [load_image('images/item_honey.png'), 17, 4]]
+items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
+         [load_image('images/item_doshik.png'), 8, 2], [load_image('images/item_honey.png'), 16, 4]]
 
 
 class Item(pygame.sprite.Sprite):
