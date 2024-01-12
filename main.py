@@ -327,8 +327,9 @@ def start_game():
                     if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
                             not player.in_house:
                         player.hide(True)
-                elif event.key == pygame.K_s and player.in_house: # Механика 'Подъезд'
+                elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
+
         # Проверка для смены локации
         plr_pos = player.rect.x
         if plr_pos < 50:
