@@ -76,6 +76,14 @@ def start_screen():  # Стартовый экран
 
     create_text(120, 395, 'Нажмите TAB чтобы начать игру')
     create_text(120, 430, 'Нажмите ESCP чтобы открыть рекордную доску')
+
+    def load_data():
+        data = cursor.execute('''SELECT * FROM main''').fetchall()
+        with open('get_data.txt', 'w', encoding='UTF-8') as f:
+            for i in data:
+                f.write(f'Выживание#{i[0]} Очки:{i[1]} Время жизни:{i[2]}'
+                        f' Состояние_персонажа: {"Выжил" if i[3] else "Не_выжил"}\n')
+        create_text(120, 355, 'Вся дата была выгруженна в "get_data.txt"')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -85,7 +93,7 @@ def start_screen():  # Стартовый экран
                     pygame.mixer.music.stop()
                     return
                 elif event.key == pygame.K_ESCAPE:
-                    print('data')
+                    load_data()
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -286,8 +294,8 @@ def start_game():
 
     player_group = pygame.sprite.Group()
     item_group = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
     player = Player(WIDTH // 2.5)
-    all_sprites = pygame.sprite.Group
 
     to_second_count = 0
 
