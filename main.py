@@ -84,6 +84,8 @@ def start_screen():  # Стартовый экран
                 if event.key == pygame.K_TAB:
                     pygame.mixer.music.stop()
                     return
+                elif event.key == pygame.K_ESCAPE:
+                    print('data')
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -91,6 +93,7 @@ def start_screen():  # Стартовый экран
 start_screen()
 item_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group
 
 SCORE = 0
 TIME_LIFE = 0
@@ -151,6 +154,15 @@ class Player(pygame.sprite.Sprite):  # Персонаж
             self.image = self.frames_static[0]
             self.in_house = status
             self.speed = 8
+
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, pos_x):
+        super().__init__(all_sprites)
+        self.pos_y = HEIGHT - 70
+        self.image = None
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(pos_x, self.pos_y)
 
 
 items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
@@ -265,13 +277,17 @@ def start_game():
     global player
     global SCORE
     global TIME_LIFE
+    global all_sprites
+    global LOCATION_NOW
 
     SCORE = 0
     TIME_LIFE = 0
+    LOCATION_NOW = centre_location
 
     player_group = pygame.sprite.Group()
     item_group = pygame.sprite.Group()
     player = Player(WIDTH // 2.5)
+    all_sprites = pygame.sprite.Group
 
     to_second_count = 0
 
@@ -343,6 +359,8 @@ def start_game():
         player_group.draw(screen)
         item_group.update()
         item_group.draw(screen)
+        all_sprites.update()
+        all_sprites.draw(screen)
 
         pygame.display.flip()
         clock.tick(FPS)
