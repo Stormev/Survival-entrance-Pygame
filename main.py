@@ -391,6 +391,9 @@ def start_game():
                 out()
             if keys[K_d] and not player.in_house:  # Движение
                 player.move(True)
+            elif keys[K_e] and LOCATION_NOW == centre_location - 1 and \
+                    WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:
+                print('here')
             elif keys[K_a] and not player.in_house:  # Движение
                 player.move(False)
             elif event.type == pygame.KEYDOWN:
@@ -404,9 +407,6 @@ def start_game():
                         end_game(True)
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
-                elif event.key == pygame.K_e and LOCATION_NOW == centre_location - 1 and \
-                        WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:
-                    print('here')
         # Проверка для смены локации
         plr_pos = player.rect.x
         if plr_pos < 50:
