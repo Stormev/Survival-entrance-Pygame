@@ -1,3 +1,5 @@
+import time
+
 import pygame
 from pygame.locals import *
 import sqlite3
@@ -195,9 +197,13 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(all_sprites)
         self.pos_y = HEIGHT - 139
+        pygame.mixer.set_num_channels(8)
+        self.voice = pygame.mixer.Channel(5)
+        self.sound_dog = pygame.mixer.Sound('data/sounds/dog.mp3')
         self.frames = []
         self.cut_sheet(load_image('images/Dog.png'), 4, 1)
         self.image = self.frames[-1]
+        self.image_id = len(self.frames)
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(pos_x, self.pos_y)
         self.is_enemy = True
@@ -210,6 +216,19 @@ class Enemy(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+
+    def update(self):
+        sound_chance = 0.1
+        if randint(1, 100)/100 == sound_chance and not self.voice.get_busy():
+            self.voice.play(self.sound_dog)
+        elif self.voice.get_busy():
+            self.image_id += 1
+            self.image = self.frames[self.image_id % (len(self.frames) - 1)]
+            if TIME_LIFE % 9 == 0:
+                self.voice.stop()
+        else:
+            self.image_id = len(self.frames) - 1
+            self.image = self.frames[self.image_id]
 
 
 items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
@@ -244,7 +263,10 @@ class Item(pygame.sprite.Sprite):
         self.rect = self.rect.move(pos_x, self.pos_y)
 
 
-player = Player(-100)
+player = Player(-100)  # model
+
+sound_door_open = pygame.mixer.Sound('data/sounds/door_open.mp3')
+sound_door_locked = pygame.mixer.Sound('data/sounds/door_locked.mp3')
 
 
 def load_location(cur_id):
@@ -346,7 +368,6 @@ def draw_status():  # Рендер текста атрибутов персон�
         create_text(260, 27, 'Вы копаетесь в мусорке...',
                     font=pygame.font.Font(None, 25), color=pygame.color.Color('Red'))
 
-
 def start_game():
     # Инициализация игры
     global TIME_LIFE
@@ -395,8 +416,11 @@ def start_game():
                     i.kill()
         for i in all_sprites:
             if player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy') and not player.have_bone:
+                pygame.mixer.Sound('data/sounds/dog_win.mp3').play()
                 end_game(False)
             elif player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy'):
+                pygame.mixer.Sound('data/sounds/dog_good.mp3').play()
+                i.voice.stop()
                 i.kill()
 
     # main cycle
@@ -423,11 +447,16 @@ def start_game():
                 if event.key == pygame.K_w:  # Механика 'Подъезд'
                     if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
                             not player.in_house:
+                        sound_door_open.stop()
+                        sound_door_open.play()
                         player.hide(True)
-                    elif LOCATION_NOW == centre_location + 1 and WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 200 and \
-                            player.have_key:
-                        player.hide(True)
-                        end_game(True)
+                    elif LOCATION_NOW == centre_location + 1 and WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 200:
+                        if player.have_key:
+                            sound_door_open.play()
+                            player.hide(True)
+                            end_game(True)
+                        else:
+                            sound_door_locked.play()
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
             else:
