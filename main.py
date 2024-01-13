@@ -167,10 +167,21 @@ class Player(pygame.sprite.Sprite):  # Персонаж
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(all_sprites)
-        self.pos_y = HEIGHT - 70
-        self.image = None
+        self.pos_y = HEIGHT - 120
+        self.frames = []
+        self.cut_sheet(load_image('images/Dog.png'), 4, 1)
+        self.image = self.frames[0]
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(pos_x, self.pos_y)
+
+    def cut_sheet(self, sheet, columns, rows):  # Нарезка
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
 
 
 items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
@@ -303,6 +314,8 @@ def start_game():
     start_music = 'data/sounds/game_sound.mp3'
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
+
+    dog = Enemy(500)
 
     def collide_items():  # Проверка на колизию с предметом
         global SCORE
