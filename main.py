@@ -140,9 +140,10 @@ class Player(pygame.sprite.Sprite):  # Персонаж
         self.in_house = False
         self.unvisible_frame = load_image('images/None.png')
 
-        self.hungry = 70
+        self.hungry = 60
         self.temp = 36
-        self.have_key = None
+        self.have_key = False
+        self.have_bone = False
 
         self.Rframes = []
         self.Lframes = []
@@ -274,8 +275,8 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
         LOCATION_NOW += 1
         cur_player.rect.x = 100
         spawn_newItem()
-        if LOCATION_NOW == 2:
-            # Enemy(WIDTH - 160)
+        if LOCATION_NOW == 2 and not player.have_key:
+            Enemy(WIDTH - 160)
             Item(WIDTH - 70, image=win_items[1][0], item_id=win_items[1][1])
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
@@ -325,6 +326,9 @@ def end_game(status):  # False = lose  True = wib GAME END
         clock.tick(FPS)
 
 
+searching = False
+
+
 def draw_status():  # Рендер текста атрибутов персонажа
     font = pygame.font.Font(None, 30)
     info = [f'Температура тела: {player.temp}', f'Сытость: {player.hungry}']
@@ -338,6 +342,9 @@ def draw_status():  # Рендер текста атрибутов персон�
         intro_rect.x = text_coord[0]
         text_coord = text_coord[0], text_coord[1] + intro_rect.height
         screen.blit(string_rendered, intro_rect)
+    if searching:
+        create_text(260, 27, 'Вы копаетесь в мусорке...',
+                    font=pygame.font.Font(None, 25), color=pygame.color.Color('Red'))
 
 
 def start_game():
@@ -350,10 +357,12 @@ def start_game():
     global TIME_LIFE
     global all_sprites
     global LOCATION_NOW
+    global searching
 
     SCORE = 0
     TIME_LIFE = 0
     LOCATION_NOW = centre_location
+    searching = False
 
     player_group = pygame.sprite.Group()
     item_group = pygame.sprite.Group()
@@ -371,6 +380,7 @@ def start_game():
 
     def check_collide():  # Проверка на колизию с предметом
         global SCORE
+
         for i in item_group:
             if player.rect.collidepoint(i.rect.center):
                 if not hasattr(i, 'item_id'):
@@ -380,9 +390,14 @@ def start_game():
                 elif i.item_id == 2:  # Подбор ключа
                     player.have_key = True
                     i.kill()
+                elif i.item_id == 1:
+                    player.have_bone = True
+                    i.kill()
         for i in all_sprites:
-            if player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy'):
+            if player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy') and not player.have_bone:
                 end_game(False)
+            elif player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy'):
+                i.kill()
 
     # main cycle
     while True:
@@ -397,13 +412,12 @@ def start_game():
                 player.move(False)
 
             elif keys[K_e] and LOCATION_NOW == centre_location - 1 and \
-                    WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:  # Поик кости
-                create_text(150, 50, 'Вы копаетесь в мусорке...',
-                            font=pygame.font.Font(None, 25), color=pygame.color.Color('Red'))
+                    WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:  # Поик кости !!!
                 chance = 0.01 * SCORE * (TIME_LIFE // 5)
-                print((randint(3, 100) / 100))
-                if chance >= 0.2 and chance > (randint(3, 100) // 100):
-                    print('nice', chance > (randint(3, 100) // 100), chance)
+                random_chance = (randint(2, 100) // 100)
+                searching = True
+                if chance >= 0.2 and chance * 0.1 >= random_chance:
+                    Item(WIDTH / 2 - 330, item_id=win_items[0][1], image=win_items[0][0])
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:  # Механика 'Подъезд'
@@ -416,6 +430,8 @@ def start_game():
                         end_game(True)
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
+            else:
+                searching = False
 
         # Проверка для смены локации
         plr_pos = player.rect.x
