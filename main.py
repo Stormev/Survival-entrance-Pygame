@@ -16,7 +16,6 @@ WIDTH, HEIGHT = size = 1024, 512
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-
 database = sqlite3.connect('data/scores.db')
 cursor = database.cursor()
 
@@ -47,8 +46,8 @@ Locations = [load_image('images/background_3.png'), load_image('images/backgroun
              load_image('images/background_2.png')]
 
 
-def create_text(x, y, text, font):
-    tip = font.render(text, 1, pygame.Color('Black'))
+def create_text(x, y, text, font, color=pygame.Color('Black')):
+    tip = font.render(text, 1, color)
     tip_rect = tip.get_rect()
     tip_rect.x = x
     tip_rect.y = y
@@ -109,6 +108,7 @@ def start_screen():  # Стартовый экран
                 f.write(f'Выживание#{i[0]} Очки:{i[1]} Время жизни:{i[2]}'
                         f' Состояние_персонажа: {"Выжил" if i[3] else "Не_выжил"}\n')
         create_text(120, 355, 'Вся дата была выгруженна в "get_data.txt"')
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -275,7 +275,7 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
         cur_player.rect.x = 100
         spawn_newItem()
         if LOCATION_NOW == 2:
-            #Enemy(WIDTH - 160)
+            # Enemy(WIDTH - 160)
             Item(WIDTH - 70, image=win_items[1][0], item_id=win_items[1][1])
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
@@ -300,7 +300,7 @@ def end_game(status):  # False = lose  True = wib GAME END
 
     info = [f'Игра окончена! Ваш персонаж: {"Выжил" if status else "Не выжил"}', f'Ваши очки: {SCORE}',
             f'Вы прожили : {TIME_LIFE} секунд', f'Ваши Результаты были успешно сохранены!',
-            f'Чтобы начать новую игру нажмите TAB',]
+            f'Чтобы начать новую игру нажмите TAB', ]
 
     text_coord = 120, 50
     for i, line in enumerate(info):
@@ -366,6 +366,7 @@ def start_game():
     start_music = 'data/sounds/game_sound.mp3'
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
+
     ###
 
     def check_collide():  # Проверка на колизию с предметом
@@ -389,13 +390,21 @@ def start_game():
             keys = pygame.key.get_pressed()  # Получить зажатые кнопки
             if event.type == pygame.QUIT:
                 out()
+
             if keys[K_d] and not player.in_house:  # Движение
                 player.move(True)
-            elif keys[K_e] and LOCATION_NOW == centre_location - 1 and \
-                    WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:
-                print('here')
             elif keys[K_a] and not player.in_house:  # Движение
                 player.move(False)
+
+            elif keys[K_e] and LOCATION_NOW == centre_location - 1 and \
+                    WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:  # Поик кости
+                create_text(150, 50, 'Вы копаетесь в мусорке...',
+                            font=pygame.font.Font(None, 25), color=pygame.color.Color('Red'))
+                chance = 0.01 * SCORE * (TIME_LIFE // 5)
+                print((randint(3, 100) / 100))
+                if chance >= 0.2 and chance > (randint(3, 100) // 100):
+                    print('nice', chance > (randint(3, 100) // 100), chance)
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:  # Механика 'Подъезд'
                     if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
@@ -407,6 +416,7 @@ def start_game():
                         end_game(True)
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
+
         # Проверка для смены локации
         plr_pos = player.rect.x
         if plr_pos < 50:
@@ -453,4 +463,3 @@ def start_game():
 
 
 start_game()
-
