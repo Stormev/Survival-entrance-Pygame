@@ -6,9 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="483c0944-e6a0-4d14-946a-35a7d14688fe" name="Changes" comment="game_update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/images/dog.png/Attack.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/images/Dog.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/images/dog.png/Walk.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/images/kandinsky-download-1704700239832.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/images/kandinsky-download-1704700239832.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/images/Dog.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/images/Dog.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/images/item_key.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/images/item_key.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/scores.db" beforeDir="false" afterPath="$PROJECT_DIR$/data/scores.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -285,7 +285,14 @@
       <option name="project" value="LOCAL" />
       <updated>1705130156090</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="game_update">
+      <created>1705135192278</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1705135192278</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

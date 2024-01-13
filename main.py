@@ -47,24 +47,36 @@ Locations = [load_image('images/background_3.png'), load_image('images/backgroun
              load_image('images/background_2.png')]
 
 
+def create_text(x, y, text, font):
+    tip = font.render(text, 1, pygame.Color('Black'))
+    tip_rect = tip.get_rect()
+    tip_rect.x = x
+    tip_rect.y = y
+    screen.blit(tip, tip_rect)
+
+
 def start_screen():  # Стартовый экран
     start_music = 'data/sounds/start_sound.mp3'
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
 
-    def create_text(x, y, text):
-        tip = font.render(text, 1, pygame.Color('Black'))
-        tip_rect = tip.get_rect()
-        tip_rect.x = x
-        tip_rect.y = y
-        screen.blit(tip, tip_rect)
+    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо', 'W/S - Зайти в подъезд/выйти', '',
+                  'Вы проиграете если:', "Температура тела <26", 'Сытотость упадёт ниже 1',
+                  'Если вы столкнётесь с врагом', '', 'Ваша основная зада:', 'Вернуть ключ от квартиры']
 
-    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо', 'W/S - Зайти в подъезд/выйти']
+    intro_text_1 = ["Предистория персонажа:", 'Посреди ночи вы просыпаетесь от пьяного соседа под окном.',
+                    'Вы пытаетесь его прогнать, но он не уходит.',
+                    'Пришлось выйти на улицу.',
+                    'Некультурный сосед спрятался от вас, пока вы спускались.',
+                    'Выйдя на улицу, вы решили пройтись вокруг дома', 'Когда вы наконец-то решили вернуться домой',
+                    'К сожалению ключ от дома вы обнаружили рядом', 'с голодной собакой, которая не хотел его отдавать.'
+                    ]
+
     fon = 'images/start_screen_controll.png'
     fon = pygame.transform.scale(load_image(fon), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 120, 50
+    font = pygame.font.Font(None, 25)
+    text_coord = 670, 40
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('Black'))
         intro_rect = string_rendered.get_rect()
@@ -74,8 +86,20 @@ def start_screen():  # Стартовый экран
         text_coord = text_coord[0], text_coord[1] + intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
-    create_text(120, 395, 'Нажмите TAB чтобы начать игру')
-    create_text(120, 430, 'Нажмите ESCP чтобы открыть рекордную доску')
+    text_coord = 120, 50
+    font = pygame.font.Font(None, 25)
+    for line in intro_text_1:
+        string_rendered = font.render(line, 1, pygame.Color('Black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord = text_coord[0], text_coord[1] + 12
+        intro_rect.top = text_coord[1]
+        intro_rect.x = text_coord[0]
+        text_coord = text_coord[0], text_coord[1] + intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    font = pygame.font.Font(None, 30)
+    create_text(120, 395, 'Нажмите TAB чтобы начать игру', font)
+    create_text(120, 430, 'Нажмите ESCP чтобы Загрузить дату игры в get_data.txt', font)
 
     def load_data():
         data = cursor.execute('''SELECT * FROM main''').fetchall()
@@ -101,7 +125,7 @@ def start_screen():  # Стартовый экран
 start_screen()
 item_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group
+all_sprites = pygame.sprite.Group()
 
 SCORE = 0
 TIME_LIFE = 0
@@ -117,6 +141,7 @@ class Player(pygame.sprite.Sprite):  # Персонаж
 
         self.hungry = 70
         self.temp = 36
+        self.have_key = None
 
         self.Rframes = []
         self.Lframes = []
@@ -167,12 +192,13 @@ class Player(pygame.sprite.Sprite):  # Персонаж
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(all_sprites)
-        self.pos_y = HEIGHT - 120
+        self.pos_y = HEIGHT - 139
         self.frames = []
         self.cut_sheet(load_image('images/Dog.png'), 4, 1)
-        self.image = self.frames[0]
+        self.image = self.frames[-1]
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(pos_x, self.pos_y)
+        self.is_enemy = True
 
     def cut_sheet(self, sheet, columns, rows):  # Нарезка
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
@@ -187,8 +213,10 @@ class Enemy(pygame.sprite.Sprite):
 items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
          [load_image('images/item_doshik.png'), 8, 2], [load_image('images/item_honey.png'), 16, 4]]
 
+win_items = [[load_image('images/item_bone.png'), 1], [load_image('images/item_key.png'), 2]]
 
-class Item(pygame.sprite.Sprite):
+
+class RandomItem(pygame.sprite.Sprite):
     def __init__(self, pos_x=randint(60, WIDTH - 60)):
         super().__init__(item_group)
         self.pos_y = HEIGHT - 70
@@ -196,6 +224,20 @@ class Item(pygame.sprite.Sprite):
         self.image = data[0]
         self.cost = data[1]
         self.score = data[2]
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(pos_x, self.pos_y)
+
+
+class Item(pygame.sprite.Sprite):
+    def __init__(self, pos_x, image=None, item_id=1):
+        super().__init__(item_group)
+        self.pos_y = HEIGHT - 50
+        self.image = image
+        self.item_id = item_id
+        if item_id == 1:  # bone
+            self.is_bone = True
+        elif item_id == 2:  # key
+            self.is_key = True
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(pos_x, self.pos_y)
 
@@ -217,15 +259,23 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
     global LOCATION_NOW
 
     def spawn_newItem():
-        for i in item_group:
+
+        for i in item_group:  # delete items
             i.kill()
-        for i in range(randint(0, 2)):
-            item = Item(randint(65, WIDTH - 65))
+
+        for i in all_sprites:  # delete other characters
+            i.kill()
+
+        for i in range(randint(0, 2)):  # create random items
+            RandomItem(randint(65, WIDTH - 65))
 
     if turn and len(Locations) > LOCATION_NOW + 1:
         LOCATION_NOW += 1
         cur_player.rect.x = 100
         spawn_newItem()
+        if LOCATION_NOW == 2:
+            #Enemy(WIDTH - 160)
+            Item(WIDTH - 70, image=win_items[1][0], item_id=win_items[1][1])
     elif LOCATION_NOW - 1 >= 0 and not turn:
         LOCATION_NOW -= 1
         cur_player.rect.x = WIDTH - 150
@@ -247,7 +297,7 @@ def end_game(status):  # False = lose  True = wib GAME END
 
     font = pygame.font.Font(None, 30)
 
-    info = [f'Игра окончена! Ваш персонаж: {"Выжил" if status else "Невыжил"}', f'Ваши очки: {SCORE}',
+    info = [f'Игра окончена! Ваш персонаж: {"Выжил" if status else "Не выжил"}', f'Ваши очки: {SCORE}',
             f'Вы прожили : {TIME_LIFE} секунд', f'Ваши Результаты были успешно сохранены!',
             f'Чтобы начать новую игру нажмите TAB',]
 
@@ -290,6 +340,7 @@ def draw_status():  # Рендер текста атрибутов персон�
 
 
 def start_game():
+    # Инициализация игры
     global TIME_LIFE
     global player_group
     global item_group
@@ -314,16 +365,22 @@ def start_game():
     start_music = 'data/sounds/game_sound.mp3'
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
+    ###
 
-    dog = Enemy(500)
-
-    def collide_items():  # Проверка на колизию с предметом
+    def check_collide():  # Проверка на колизию с предметом
         global SCORE
         for i in item_group:
             if player.rect.collidepoint(i.rect.center):
-                player.hungry += i.cost
-                SCORE += i.score
-                i.kill()
+                if not hasattr(i, 'item_id'):
+                    player.hungry += i.cost  # рандомный предмет
+                    SCORE += i.score
+                    i.kill()
+                elif i.item_id == 2:  # Подбор ключа
+                    player.have_key = True
+                    i.kill()
+        for i in all_sprites:
+            if player.rect.collidepoint(i.rect.center) and hasattr(i, 'is_enemy'):
+                end_game(False)
 
     # main cycle
     while True:
@@ -340,6 +397,10 @@ def start_game():
                     if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
                             not player.in_house:
                         player.hide(True)
+                    elif LOCATION_NOW == centre_location + 1 and WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150 and \
+                            player.have_key:
+                        player.hide(True)
+                        end_game(True)
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
 
@@ -375,7 +436,7 @@ def start_game():
 
         load_location(LOCATION_NOW)
         draw_status()
-        collide_items()
+        check_collide()
 
         player_group.update()
         player_group.draw(screen)
