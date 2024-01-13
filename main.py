@@ -60,7 +60,8 @@ def start_screen():  # Стартовый экран
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
 
-    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо', 'W/S - Зайти в подъезд/выйти', '',
+    intro_text = ["Управление:", 'A - Движение налево', 'D - Движение направо', 'W/S - Зайти в подъезд/выйти',
+                  'E - Копаться в мусорке', '',
                   'Вы проиграете если:', "Температура тела <26", 'Сытотость упадёт ниже 1',
                   'Если вы столкнётесь с врагом', '', 'Ваша основная зада:', 'Вернуть ключ от квартиры']
 
@@ -397,13 +398,15 @@ def start_game():
                     if LOCATION_NOW == centre_location and WIDTH / 2 - 50 < player.rect.x < WIDTH / 2 + 50 and \
                             not player.in_house:
                         player.hide(True)
-                    elif LOCATION_NOW == centre_location + 1 and WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150 and \
+                    elif LOCATION_NOW == centre_location + 1 and WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 200 and \
                             player.have_key:
                         player.hide(True)
                         end_game(True)
                 elif event.key == pygame.K_s and player.in_house:  # Механика 'Подъезд'
                     player.hide(False)
-
+                elif event.key == pygame.K_e and LOCATION_NOW == centre_location - 1 and \
+                        WIDTH / 2 - 300 < player.rect.x < WIDTH / 2 - 150:
+                    print('here')
         # Проверка для смены локации
         plr_pos = player.rect.x
         if plr_pos < 50:
