@@ -1,5 +1,3 @@
-import time
-
 import pygame
 from pygame.locals import *
 import sqlite3
@@ -12,12 +10,14 @@ import os
 # height 512
 # background_3 <- background_1 ->  background_2
 
+# настройки
 FPS = 15
 pygame.init()
 WIDTH, HEIGHT = size = 1024, 512
 screen = pygame.display.set_mode(size=(WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
+# База данных
 database = sqlite3.connect('data/scores.db')
 cursor = database.cursor()
 
@@ -29,12 +29,14 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS main
             """)
 
 
-def out():  # Выход
+# Выход
+def out():
     database.close()
     pygame.quit()
     sys.exit()
 
 
+# Загрузка картинки
 def load_image(name):  # Загрузка картинки
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -48,6 +50,7 @@ Locations = [load_image('images/background_3.png'), load_image('images/backgroun
              load_image('images/background_2.png')]
 
 
+# Создать текст
 def create_text(x, y, text, font, color=pygame.Color('Black')):
     tip = font.render(text, 1, color)
     tip_rect = tip.get_rect()
@@ -56,6 +59,7 @@ def create_text(x, y, text, font, color=pygame.Color('Black')):
     screen.blit(tip, tip_rect)
 
 
+# Стартовое окно
 def start_screen():  # Стартовый экран
     start_music = 'data/sounds/start_sound.mp3'
     pygame.mixer.music.load(start_music)
@@ -134,6 +138,7 @@ SCORE = 0
 TIME_LIFE = 0
 
 
+# Игрок
 class Player(pygame.sprite.Sprite):  # Персонаж
     def __init__(self, pos_x):
         super().__init__(player_group)
@@ -193,6 +198,7 @@ class Player(pygame.sprite.Sprite):  # Персонаж
             self.speed = 8
 
 
+# Cобака
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x):
         super().__init__(all_sprites)
@@ -219,7 +225,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         sound_chance = 0.1
-        if randint(1, 100)/100 == sound_chance and not self.voice.get_busy():
+        if randint(1, 100) / 100 == sound_chance and not self.voice.get_busy():
             self.voice.play(self.sound_dog)
         elif self.voice.get_busy():
             self.image_id += 1
@@ -231,12 +237,14 @@ class Enemy(pygame.sprite.Sprite):
             self.image = self.frames[self.image_id]
 
 
+# Дата предметов
 items = [[load_image('images/item_bytilka.png'), -9, -1], [load_image('images/item_chocolate.png'), 12, 3],
          [load_image('images/item_doshik.png'), 8, 2], [load_image('images/item_honey.png'), 16, 4]]
 
 win_items = [[load_image('images/item_bone.png'), 1], [load_image('images/item_key.png'), 2]]
 
 
+# Класс рандомного предмета
 class RandomItem(pygame.sprite.Sprite):
     def __init__(self, pos_x=randint(60, WIDTH - 60)):
         super().__init__(item_group)
@@ -249,6 +257,7 @@ class RandomItem(pygame.sprite.Sprite):
         self.rect = self.rect.move(pos_x, self.pos_y)
 
 
+# Класс сюжетных предметов
 class Item(pygame.sprite.Sprite):
     def __init__(self, pos_x, image=None, item_id=1):
         super().__init__(item_group)
@@ -263,7 +272,8 @@ class Item(pygame.sprite.Sprite):
         self.rect = self.rect.move(pos_x, self.pos_y)
 
 
-player = Player(-100)  # model
+# model
+player = Player(-100)
 
 sound_door_open = pygame.mixer.Sound('data/sounds/door_open.mp3')
 sound_door_locked = pygame.mixer.Sound('data/sounds/door_locked.mp3')
@@ -279,15 +289,18 @@ centre_location = len(Locations) // 2
 LOCATION_NOW = centre_location
 
 
-def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗКА ЛОКАЦИИ
+# True = right False = left ЗАГРУЗКА ЛОКАЦИИ
+def next_locations(cur_player, turn):
     global LOCATION_NOW
 
     def spawn_newItem():
 
-        for i in item_group:  # delete items
+        # delete items
+        for i in item_group:
             i.kill()
 
-        for i in all_sprites:  # delete other characters
+        # delete other characters
+        for i in all_sprites:
             i.kill()
 
         for i in range(randint(0, 2)):  # create random items
@@ -310,7 +323,8 @@ def next_locations(cur_player, turn):  # True = right False = left ЗАГРУЗ�
         cur_player.rect.x += 20
 
 
-def end_game(status):  # False = lose  True = wib GAME END
+# False = lose  True = wib GAME END
+def end_game(status):
     screen.fill((50, 50, 70))
     fon = 'images/start_screen_controll.png'
     fon = pygame.transform.scale(load_image(fon), (WIDTH, HEIGHT))
@@ -368,6 +382,7 @@ def draw_status():  # Рендер текста атрибутов персон�
         create_text(260, 27, 'Вы копаетесь в мусорке...',
                     font=pygame.font.Font(None, 25), color=pygame.color.Color('Red'))
 
+
 def start_game():
     # Инициализация игры
     global TIME_LIFE
@@ -397,9 +412,8 @@ def start_game():
     pygame.mixer.music.load(start_music)
     pygame.mixer.music.play()
 
-    ###
-
-    def check_collide():  # Проверка на колизию с предметом
+    # Проверка на колизию с предметом
+    def check_collide():
         global SCORE
 
         for i in item_group:
@@ -469,12 +483,14 @@ def start_game():
         elif plr_pos > WIDTH - 50:
             next_locations(player, True)
 
-        if to_second_count >= FPS:  # Счётчик 1-й секунды
+            # Счётчик 1-й секунды
+        if to_second_count >= FPS:
             to_second_count = 0
             player.hungry -= 1
             TIME_LIFE += 1
 
-            if not player.in_house and randint(0, 4) == 4:  # температура
+            # температура
+            if not player.in_house and randint(0, 4) == 4:
                 player.temp -= 1
             elif player.in_house:
                 if player.temp + 1 <= 36:
@@ -482,7 +498,8 @@ def start_game():
         else:
             to_second_count += 1
 
-        if player.hungry < 0:  # Проверка выживаемости
+        # Проверка выживаемости
+        if player.hungry < 0:
             end_game(False)
             break
         elif player.temp <= 25:
